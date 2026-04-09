@@ -112,7 +112,29 @@ class Processor {
 		fclose( $pipes[1] );
 		fclose( $pipes[2] );
 		$code = proc_close( $proc );
-		return array( 'code' => $code, 'output' => $out );
+		return array( 'code' => $code, 'output' => $this->to_utf8( $out ) );
+	}
+
+	/**
+	 * Normaliza saída de comandos para UTF-8.
+	 * No Windows o CMD usa CP850/CP1252 por padrão e quebra o JSON da REST.
+	 */
+	protected function to_utf8( $text ) {
+		if ( $text === null || $text === '' ) {
+			return '';
+		}
+		if ( function_exists( 'mb_check_encoding' ) && mb_check_encoding( $text, 'UTF-8' ) ) {
+			return $text;
+		}
+		if ( function_exists( 'mb_convert_encoding' ) ) {
+			$from = stripos( PHP_OS, 'WIN' ) === 0 ? 'CP850,Windows-1252,ISO-8859-1' : 'ISO-8859-1';
+			$converted = @mb_convert_encoding( $text, 'UTF-8', $from );
+			if ( $converted !== false ) {
+				return $converted;
+			}
+		}
+		// Fallback: remove bytes inválidos.
+		return preg_replace( '/[^\x09\x0A\x0D\x20-\x7E]/', '?', $text );
 	}
 
 	/**

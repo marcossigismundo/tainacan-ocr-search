@@ -3,7 +3,7 @@
  * Plugin Name: Tainacan OCR Search
  * Plugin URI:  https://github.com/marcossigismundo/tainacan-ocr-search
  * Description: Torna pesquisáveis no Tainacan o conteúdo de PDFs e imagens escaneadas (fichas médicas, relatórios etc.) usando OCR livre (Tesseract + OCRmyPDF). Adiciona uma página administrativa integrada ao Tainacan com fluxo guiado: verifica dependências, processa documentos em lote, reindexa o conteúdo e habilita a busca textual nativa.
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      Marcos Sigismundo
  * License:     GPL-2.0-or-later
  * Text Domain: tainacan-ocr-search
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TAINACAN_OCR_SEARCH_VERSION', '1.0.0' );
+define( 'TAINACAN_OCR_SEARCH_VERSION', '1.0.1' );
 define( 'TAINACAN_OCR_SEARCH_FILE', __FILE__ );
 define( 'TAINACAN_OCR_SEARCH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'TAINACAN_OCR_SEARCH_URL', plugin_dir_url( __FILE__ ) );

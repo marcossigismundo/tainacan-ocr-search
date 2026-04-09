@@ -107,10 +107,11 @@ class Admin_Page extends \Tainacan\Pages {
 				<details class="tnc-ocr-howto">
 					<summary><?php esc_html_e( 'Como instalar?', 'tainacan-ocr-search' ); ?></summary>
 					<p><strong>Linux (Debian/Ubuntu):</strong></p>
-					<pre>sudo apt install tesseract-ocr tesseract-ocr-por ocrmypdf poppler-utils</pre>
+					<pre>sudo apt install tesseract-ocr tesseract-ocr-por ocrmypdf ghostscript poppler-utils</pre>
 					<p><strong>macOS:</strong></p>
-					<pre>brew install tesseract tesseract-lang ocrmypdf poppler</pre>
-					<p><strong>Windows:</strong> instale o <a href="https://github.com/UB-Mannheim/tesseract/wiki" target="_blank" rel="noopener">Tesseract UB-Mannheim</a> e o OCRmyPDF via <code>pip install ocrmypdf</code>. Informe os caminhos completos dos executáveis no passo 2.</p>
+					<pre>brew install tesseract tesseract-lang ocrmypdf ghostscript poppler</pre>
+					<p><strong>Windows (XAMPP):</strong> instale o <a href="https://github.com/UB-Mannheim/tesseract/wiki" target="_blank" rel="noopener">Tesseract UB-Mannheim</a>, o <a href="https://www.ghostscript.com/releases/gsdnld.html" target="_blank" rel="noopener">Ghostscript</a>, o Python e rode <code>pip install ocrmypdf</code>. Reinicie o Apache pelo painel do XAMPP. Se persistir o erro, informe os caminhos completos dos executáveis no passo 2.</p>
+					<p><a href="https://github.com/marcossigismundo/tainacan-ocr-search/blob/main/docs/INSTALL.md" target="_blank" rel="noopener"><?php esc_html_e( '➜ Guia completo de instalação (Linux, macOS, Windows)', 'tainacan-ocr-search' ); ?></a></p>
 				</details>
 			</section>
 
