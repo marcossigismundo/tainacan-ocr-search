@@ -1,6 +1,8 @@
 # CLAUDE_CONTEXT — Tainacan OCR Search
 
 > Arquivo de contexto para retomar o desenvolvimento deste plugin em qualquer sessão futura. Leia primeiro antes de modificar qualquer coisa.
+>
+> Decisões, armadilhas e pendências: [MEMORIA.md](MEMORIA.md).
 
 ## Visão geral
 
