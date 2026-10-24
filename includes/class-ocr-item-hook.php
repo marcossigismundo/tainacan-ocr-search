@@ -105,8 +105,9 @@ class Item_Hook {
 					'hideText'      => __( 'Ocultar texto', 'tainacan-ocr-search' ),
 					/* translators: %d: page number */
 					'page'          => __( 'Página %d', 'tainacan-ocr-search' ),
+					'noText'        => __( 'O OCR não encontrou texto neste arquivo (página em branco ou só imagem).', 'tainacan-ocr-search' ),
 					'noFiles'       => __( 'Este item ainda não tem PDF nem imagem. Envie o documento ou anexos e o quadro aparece aqui.', 'tainacan-ocr-search' ),
-					'allDone'       => __( 'Todos os arquivos têm texto reconhecido.', 'tainacan-ocr-search' ),
+					'allDone'       => __( 'OCR concluído em todos os arquivos.', 'tainacan-ocr-search' ),
 					'working'       => __( 'O OCR roda no servidor: pode continuar editando ou salvar o item. Leva cerca de 2 a 3 minutos a cada 16 páginas.', 'tainacan-ocr-search' ),
 					'auto'          => __( 'O OCR automático está ligado: arquivos novos entram na fila sozinhos.', 'tainacan-ocr-search' ),
 					/* translators: 1: files with text, 2: total files */

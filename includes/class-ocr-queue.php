@@ -291,7 +291,9 @@ class Queue {
 		if ( in_array( $raw, array( 'queued', 'processing', 'failed' ), true ) ) {
 			$status = $raw;
 		} elseif ( '' !== $processed ) {
-			$status = '' !== trim( $text ) ? 'done' : 'empty';
+			// Só quebras de página e espaços (página em branco) não é texto;
+			// trim() não remove "\f".
+			$status = preg_match( '/[\p{L}\p{N}]/u', $text ) ? 'done' : 'empty';
 		} else {
 			$status = 'none';
 		}
@@ -299,7 +301,7 @@ class Queue {
 		return array(
 			'status'       => $status,
 			'pages'        => (int) get_post_meta( $attachment_id, Processor::META_PAGES, true ),
-			'chars'        => mb_strlen( $text ),
+			'chars'        => mb_strlen( (string) preg_replace( '/\s+/u', ' ', trim( str_replace( "\f", ' ', $text ) ) ) ),
 			'processed_at' => $processed,
 			'started_at'   => (int) get_post_meta( $attachment_id, self::META_STARTED_AT, true ),
 			'error'        => 'failed' === $status ? wp_strip_all_tags( (string) get_post_meta( $attachment_id, Processor::META_LOG, true ) ) : '',

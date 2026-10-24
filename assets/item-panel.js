@@ -253,6 +253,8 @@
 			html += '<div class="tnc-ocr-text" tabindex="0">';
 			if ( ! pages ) {
 				html += '<span class="tnc-ocr-spinner" aria-hidden="true"></span>';
+			} else if ( ! pages.length ) {
+				html += '<p>' + esc( t.noText ) + '</p>';
 			} else {
 				pages.forEach( function ( p ) {
 					html += '<h5>' + esc( fmt( t.page, p.page ) ) + '</h5><p>' + esc( p.text ) + '</p>';
@@ -307,7 +309,8 @@
 		}
 		if ( active || state.busy ) {
 			html += '<p class="tnc-ocr-item__note is-working"><span class="tnc-ocr-spinner" aria-hidden="true"></span>' + esc( t.working ) + '</p>';
-		} else if ( ! pending.length && withText === files.length ) {
+		} else if ( ! pending.length ) {
+			// Processados todos (com texto ou página sem texto).
 			html += '<p class="tnc-ocr-item__note is-ok"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>' + esc( t.allDone ) + '</p>';
 		}
 		if ( state.data.auto_process && pending.length ) {
