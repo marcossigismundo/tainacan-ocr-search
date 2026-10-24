@@ -88,10 +88,19 @@
 	border-radius: var(--tnc-ocr-radius);
 }
 
+/* Ícone + nome na primeira linha, situação logo abaixo do nome: na coluna
+   estreita do formulário, o selo ao lado espremia o nome do arquivo. */
 .tnc-ocr-file__main {
-	display: flex;
-	align-items: center;
-	gap: 0.5em;
+	display: grid;
+	grid-template-columns: auto minmax( 0, 1fr );
+	align-items: start;
+	column-gap: 0.5em;
+	row-gap: 0.35em;
+}
+
+.tnc-ocr-file__main .tnc-ocr-badge {
+	grid-column: 2;
+	justify-self: start;
 }
 
 .tnc-ocr-file__icon {

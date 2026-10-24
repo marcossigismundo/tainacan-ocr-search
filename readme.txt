@@ -4,7 +4,7 @@ Tags: tainacan, ocr, pdf, tesseract, ocrmypdf, busca, fichas medicas
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 
 Aplica OCR (Tesseract + OCRmyPDF) em PDFs e imagens das coleções Tainacan, deixando o conteúdo pesquisável pela busca textual nativa.
@@ -38,6 +38,9 @@ Windows: instale o Tesseract UB-Mannheim e `pip install ocrmypdf`.
 3. Siga os 4 passos da página: verificar dependências, configurar, processar em lote, e (opcional) rodar `wp tainacan index-content --collection=all` para reindexar o acervo inteiro.
 
 == Changelog ==
+
+= 1.2.1 =
+* Quadro do item: a situação do arquivo fica embaixo do nome; na coluna estreita do formulário, o selo ao lado espremia o nome.
 
 = 1.2.0 =
 * Quadro "Texto dos arquivos (OCR)" na edição do item: situação de cada PDF e imagem do item (sem OCR, na fila, reconhecendo, com texto, falhou), botão "Aplicar OCR em N arquivo(s)", "Refazer", "Tentar de novo" e leitura do texto reconhecido página a página. O catalogador não precisa sair do item.
