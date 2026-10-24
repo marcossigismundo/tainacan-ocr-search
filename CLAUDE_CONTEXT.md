@@ -10,7 +10,7 @@ Ele aplica OCR usando ferramentas livres (**Tesseract** + **OCRmyPDF**) sem alte
 
 - **Repositório**: https://github.com/marcossigismundo/tainacan-ocr-search
 - **Path local (Windows/XAMPP)**: `C:\xampp82\htdocs\wordpress\wp-content\plugins\tainacan-ocr-search`
-- **Versão atual**: 1.0.1
+- **Versão atual**: 1.1.0 (23/10/2026; publicada no site `catalogacao` da VPS KVM 1)
 - **Autor**: Marcos Sigismundo
 - **Idioma da interface**: Português brasileiro
 - **Licença**: GPL-2.0-or-later
@@ -72,6 +72,17 @@ tainacan-ocr-search/
    g. Re-salva o item-pai → dispara reindex do Tainacan
 7. Card 4: instrui rodar `wp tainacan index-content --collection=all`
 ```
+
+## Mudanças da 1.1.0 (23/10/2026)
+
+- **Original preservado por padrão** (`replace_original` = 0): o OCRmyPDF gera um PDF temporário só para extrair o texto; o arquivo do acervo não muda.
+- Texto em `_tainacan_ocr_text` (páginas separadas por ``) + `_tainacan_ocr_pages`.
+- **Filtro `tainacan-index-pdf`** (`Processor::filter_core_pdf_text`): entrega o OCR do documento principal ao core, que grava no `document_content_index`. A `` vira `
+
+` (`text_for_index`) porque `Pdf_Extracted_Text_Quality` do core 1.4 recusa caracteres de controle e então APAGA o índice. `reindex_parent_item` apaga `document_content_last_index` antes de `generate_index_content` (senão o core pula o arquivo que não mudou). Core < 1.4 ou documento em imagem: grava o índice direto.
+- Ação `tainacan_ocr_search_text_updated( $attachment_id, $item_id, $text )` — o Oráculo Tainacan escuta para reindexar o item.
+- WP-CLI `wp tainacan-ocr status|process [--collection] [--all] [--limit]|reindex`.
+- Fila exclui miniaturas geradas pelo Tainacan (mas não documento em imagem).
 
 ## Pontos críticos / armadilhas conhecidas
 

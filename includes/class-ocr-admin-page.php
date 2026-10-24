@@ -75,9 +75,17 @@ class Admin_Page extends \Tainacan\Pages {
 				'processing'      => __( 'Processando', 'tainacan-ocr-search' ),
 				'done'            => __( 'Concluído', 'tainacan-ocr-search' ),
 				'noPending'       => __( 'Nenhum documento pendente nesta seleção.', 'tainacan-ocr-search' ),
+				/* translators: %d: number of documents in the OCR queue */
 				'confirmRun'      => __( 'Iniciar OCR em %d documentos?', 'tainacan-ocr-search' ),
 				'savedSettings'   => __( 'Configurações salvas.', 'tainacan-ocr-search' ),
 				'errorPrefix'     => __( 'Erro: ', 'tainacan-ocr-search' ),
+				'optional'        => __( 'opcional', 'tainacan-ocr-search' ),
+				'langsInstalled'  => __( 'Idiomas Tesseract instalados:', 'tainacan-ocr-search' ),
+				'coreOn'          => __( 'A indexação de conteúdo de PDF do Tainacan está ligada: o texto do OCR do documento principal entra na busca nativa.', 'tainacan-ocr-search' ),
+				'coreOff'         => __( 'A indexação de conteúdo de PDF do Tainacan está desligada: sem ela, o texto do OCR do documento principal não chega à busca nativa.', 'tainacan-ocr-search' ),
+				'coreEnable'      => __( 'Ligar agora', 'tainacan-ocr-search' ),
+				/* translators: 1: pages, 2: characters, 3: seconds */
+				'doneDetail'      => __( '%1$s pág., %2$s caracteres, %3$ss', 'tainacan-ocr-search' ),
 			),
 		) );
 	}
@@ -89,7 +97,7 @@ class Admin_Page extends \Tainacan\Pages {
 			<header class="tnc-ocr-header">
 				<h1><?php esc_html_e( 'Tainacan OCR Search', 'tainacan-ocr-search' ); ?></h1>
 				<p class="tnc-ocr-lead">
-					<?php esc_html_e( 'Torne pesquisáveis fichas médicas, relatórios e outros documentos escaneados. O plugin aplica OCR (Tesseract + OCRmyPDF) nos PDFs e imagens das suas coleções, adiciona uma camada de texto invisível e reindexa o conteúdo no Tainacan — sem alterar a aparência dos arquivos originais.', 'tainacan-ocr-search' ); ?>
+					<?php esc_html_e( 'Torne pesquisáveis fichas médicas, relatórios e outros documentos escaneados. O plugin aplica OCR (Tesseract + OCRmyPDF) nos PDFs e imagens das suas coleções, guarda o texto reconhecido em cada anexo e reindexa o item no Tainacan. Por padrão os arquivos originais não são alterados.', 'tainacan-ocr-search' ); ?>
 				</p>
 			</header>
 
@@ -138,6 +146,7 @@ class Admin_Page extends \Tainacan\Pages {
 						<label><input type="checkbox" name="clean"> <?php esc_html_e( 'Limpeza de ruído (recomendado para fichas escaneadas)', 'tainacan-ocr-search' ); ?></label>
 						<label><input type="checkbox" name="force_ocr"> <?php esc_html_e( 'Forçar OCR mesmo em PDFs que já contêm texto', 'tainacan-ocr-search' ); ?></label>
 						<label><input type="checkbox" name="auto_process"> <?php esc_html_e( 'Processar automaticamente novos uploads', 'tainacan-ocr-search' ); ?></label>
+						<label><input type="checkbox" name="replace_original"> <?php esc_html_e( 'Substituir o PDF original pela versão com camada de texto (PDF/A). Desligado, o original fica intacto e só o texto é guardado. Imagens nunca são substituídas.', 'tainacan-ocr-search' ); ?></label>
 					</fieldset>
 					<button type="submit" class="button button-primary"><?php esc_html_e( 'Salvar', 'tainacan-ocr-search' ); ?></button>
 					<span id="tnc-ocr-settings-msg" class="tnc-ocr-msg"></span>
@@ -178,10 +187,14 @@ class Admin_Page extends \Tainacan\Pages {
 			<!-- PASSO 4: como buscar -->
 			<section class="tnc-ocr-card" data-step="4">
 				<h2><span class="tnc-step">4</span> <?php esc_html_e( 'Pronto! Como pesquisar', 'tainacan-ocr-search' ); ?></h2>
+				<div id="tnc-ocr-core-status" class="tnc-ocr-result"></div>
 				<p>
-					<?php esc_html_e( 'Após o OCR, o conteúdo dos PDFs fica disponível para a busca textual nativa do Tainacan. Para indexar o acervo inteiro de uma vez (recomendado após o primeiro lote), execute via WP-CLI:', 'tainacan-ocr-search' ); ?>
+					<?php esc_html_e( 'O texto de cada anexo fica guardado nele (meta _tainacan_ocr_text, páginas separadas por quebra de página). O do documento principal também entra no índice de conteúdo do item usado pela busca textual do Tainacan. Plugins de busca semântica, como o Oráculo Tainacan, leem os dois.', 'tainacan-ocr-search' ); ?>
 				</p>
-				<pre>wp tainacan index-content --collection=all</pre>
+				<p><?php esc_html_e( 'Para lotes grandes, use o WP-CLI no servidor:', 'tainacan-ocr-search' ); ?></p>
+				<pre>wp tainacan-ocr status
+wp tainacan-ocr process --collection=&lt;ID&gt;
+wp tainacan-ocr reindex</pre>
 				<p>
 					<?php esc_html_e( 'Em coleções públicas com dados sensíveis, lembre-se de revisar permissões e considere anonimizar campos pessoais antes de publicar.', 'tainacan-ocr-search' ); ?>
 				</p>

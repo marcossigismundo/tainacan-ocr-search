@@ -38,6 +38,7 @@
 		out.innerHTML = '<p>' + escape( i18n.checking ) + '</p>';
 		api( '/check' ).then( function ( data ) {
 			out.innerHTML = renderCheck( data );
+			renderCoreStatus( data.tainacan_pdf_index || {} );
 		} ).catch( function ( err ) {
 			out.innerHTML = '<p class="tnc-ocr-bad">' + escape( i18n.errorPrefix + ( err.message || err ) ) + '</p>';
 		} );
@@ -45,12 +46,13 @@
 
 	function renderCheck( data ) {
 		const rows = [];
-		[ 'tesseract', 'ocrmypdf' ].forEach( function ( k ) {
+		[ 'tesseract', 'ocrmypdf', 'pdftotext', 'unpaper' ].forEach( function ( k ) {
 			const r = data[ k ] || {};
-			const cls = r.ok ? 'tnc-ocr-good' : 'tnc-ocr-bad';
+			const optional = k === 'pdftotext' || k === 'unpaper';
+			const cls = r.ok ? 'tnc-ocr-good' : ( optional ? '' : 'tnc-ocr-bad' );
 			const status = r.ok ? '✓ ' + i18n.installed : '✗ ' + i18n.missing;
 			rows.push(
-				'<li class="' + cls + '"><strong>' + k + '</strong>: ' + escape( status ) +
+				'<li class="' + cls + '"><strong>' + k + '</strong>' + ( optional ? ' <small>(' + escape( i18n.optional ) + ')</small>' : '' ) + ': ' + escape( status ) +
 				( r.version ? ' <code>' + escape( r.version ) + '</code>' : '' ) +
 				( r.error ? '<br><small>' + escape( r.error ) + '</small>' : '' ) +
 				'</li>'
@@ -58,10 +60,37 @@
 		} );
 		let langs = '';
 		if ( data.tesseract && data.tesseract.languages ) {
-			langs = '<p class="tnc-ocr-help">Idiomas Tesseract instalados: <code>' +
+			langs = '<p class="tnc-ocr-help">' + escape( i18n.langsInstalled ) + ' <code>' +
 				escape( data.tesseract.languages.join( ', ' ) ) + '</code></p>';
 		}
 		return '<ul class="tnc-ocr-deps">' + rows.join( '' ) + '</ul>' + langs;
+	}
+
+	// ---------- Passo 4: indexação de PDF do core ----------
+	function renderCoreStatus( core ) {
+		const box = el( 'tnc-ocr-core-status' );
+		if ( ! box ) return;
+		box.innerHTML = '';
+		const p = document.createElement( 'p' );
+		p.className = core.ok ? 'tnc-ocr-good' : 'tnc-ocr-bad';
+		p.textContent = ( core.ok ? '✓ ' : '✗ ' ) + ( core.ok ? i18n.coreOn : i18n.coreOff ) + ' ';
+		if ( ! core.ok ) {
+			const btn = document.createElement( 'button' );
+			btn.type = 'button';
+			btn.className = 'button button-secondary';
+			btn.textContent = i18n.coreEnable;
+			btn.addEventListener( 'click', function () {
+				btn.disabled = true;
+				api( '/core-pdf-index', { method: 'POST' } ).then( function ( res ) {
+					renderCoreStatus( { ok: !! res.enabled } );
+				} ).catch( function ( err ) {
+					btn.disabled = false;
+					p.appendChild( document.createTextNode( ' ' + i18n.errorPrefix + ( err.message || err ) ) );
+				} );
+			} );
+			p.appendChild( btn );
+		}
+		box.appendChild( p );
 	}
 
 	// ---------- Passo 2: configurações ----------
@@ -170,7 +199,11 @@
 			el( 'tnc-ocr-done' ).textContent = String( queueIndex );
 			updateBar();
 			if ( res.success ) {
-				addLog( '#' + id + ' ✓ ' + i18n.done + ' (' + res.text_length + ' chars)', 'tnc-ocr-good' );
+				const detail = ( i18n.doneDetail || '%1$s / %2$s / %3$s' )
+					.replace( '%1$s', res.pages || 0 )
+					.replace( '%2$s', res.text_length || 0 )
+					.replace( '%3$s', res.seconds || 0 );
+				addLog( '#' + id + ' ✓ ' + i18n.done + ' (' + detail + ')', 'tnc-ocr-good' );
 			} else {
 				addLog( '#' + id + ' ✗ ' + ( res.message || 'erro' ), 'tnc-ocr-bad' );
 			}
@@ -205,6 +238,8 @@
 		return String( s == null ? '' : s )
 			.replace( /&/g, '&amp;' )
 			.replace( /</g, '&lt;' )
-			.replace( />/g, '&gt;' );
+			.replace( />/g, '&gt;' )
+			.replace( /"/g, '&quot;' )
+			.replace( /'/g, '&#39;' );
 	}
 } )();
