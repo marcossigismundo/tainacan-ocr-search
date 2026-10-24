@@ -74,6 +74,19 @@ class Queue {
 	}
 
 	/**
+	 * É a miniatura que o Tainacan gera para o item (e não o documento)?
+	 *
+	 * @param int $attachment_id Anexo.
+	 * @return bool
+	 */
+	public static function is_generated_thumbnail( $attachment_id ) {
+		$parent = (int) get_post_field( 'post_parent', $attachment_id );
+		return $parent
+			&& (int) get_post_thumbnail_id( $parent ) === (int) $attachment_id
+			&& (int) get_post_meta( $parent, 'document', true ) !== (int) $attachment_id;
+	}
+
+	/**
 	 * Processa um arquivo agora, marcando a situação (worker, CLI e rota antiga).
 	 *
 	 * @param int       $attachment_id Anexo.
@@ -181,6 +194,11 @@ class Queue {
 					break;
 				}
 				update_option( self::LOCK_OPTION, time() . '|' . $token, false );
+				if ( self::is_generated_thumbnail( $next ) ) {
+					// Miniatura que o Tainacan gerou no envio: sai da fila sem OCR.
+					self::dequeue( array( $next ) );
+					continue;
+				}
 				self::process_one( $next, $processor );
 			}
 		} finally {

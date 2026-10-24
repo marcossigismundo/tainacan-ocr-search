@@ -3,7 +3,7 @@
  * Plugin Name: Tainacan OCR Search
  * Plugin URI:  https://github.com/marcossigismundo/tainacan-ocr-search
  * Description: Torna pesquisáveis no Tainacan o conteúdo de PDFs e imagens escaneadas (fichas médicas, relatórios etc.) usando OCR livre (Tesseract + OCRmyPDF). Adiciona uma página administrativa integrada ao Tainacan com fluxo guiado: verifica dependências, processa documentos em lote, reindexa o conteúdo e habilita a busca textual nativa.
- * Version:     1.2.1
+ * Version:     1.2.2
  * Author:      Marcos Sigismundo
  * License:     GPL-2.0-or-later
  * Text Domain: tainacan-ocr-search
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TAINACAN_OCR_SEARCH_VERSION', '1.2.1' );
+define( 'TAINACAN_OCR_SEARCH_VERSION', '1.2.2' );
 define( 'TAINACAN_OCR_SEARCH_FILE', __FILE__ );
 define( 'TAINACAN_OCR_SEARCH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'TAINACAN_OCR_SEARCH_URL', plugin_dir_url( __FILE__ ) );
@@ -80,25 +80,26 @@ add_action(
 		if ( ! \Tainacan_OCR_Search\Processor::is_supported_attachment( $attachment_id ) ) {
 			return;
 		}
-		wp_schedule_single_event( time() + 5, 'tainacan_ocr_search_process_single', array( $attachment_id ) );
-	}
-);
-
-add_action(
-	'tainacan_ocr_search_process_single',
-	function ( $attachment_id ) {
-		// Só o que a fila consideraria elegível: anexo de item Tainacan, fora a
-		// miniatura gerada pelo Tainacan (salvo documento em imagem).
+		// Só anexos de item do Tainacan.
 		$parent = (int) get_post_field( 'post_parent', $attachment_id );
 		if ( ! $parent || ! preg_match( '/^tnc_col_\d+_item$/', (string) get_post_type( $parent ) ) ) {
 			return;
 		}
-		$is_document = (int) get_post_meta( $parent, 'document', true ) === (int) $attachment_id;
-		if ( ! $is_document && (int) get_post_thumbnail_id( $parent ) === (int) $attachment_id ) {
-			return;
-		}
-		// Vai para a fila (um OCR por vez, com a situação visível no item).
+		// Entra na fila no próprio envio, para o quadro do item já mostrar
+		// "Na fila". Um evento agendado à parte esperava os outros workers do
+		// WP-Cron e um segundo ciclo. A miniatura que o Tainacan gera também
+		// chega aqui; o worker a reconhece e tira da fila sem OCR.
 		\Tainacan_OCR_Search\Queue::enqueue( array( (int) $attachment_id ) );
+	}
+);
+
+// Eventos agendados pela 1.2.0 ou anterior: viram fila.
+add_action(
+	'tainacan_ocr_search_process_single',
+	function ( $attachment_id ) {
+		if ( ! \Tainacan_OCR_Search\Queue::is_generated_thumbnail( $attachment_id ) ) {
+			\Tainacan_OCR_Search\Queue::enqueue( array( (int) $attachment_id ) );
+		}
 	}
 );
 
