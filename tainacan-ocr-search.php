@@ -3,7 +3,7 @@
  * Plugin Name: Tainacan OCR Search
  * Plugin URI:  https://github.com/marcossigismundo/tainacan-ocr-search
  * Description: Torna pesquisáveis no Tainacan o conteúdo de PDFs e imagens escaneadas (fichas médicas, relatórios etc.) usando OCR livre (Tesseract + OCRmyPDF). Adiciona uma página administrativa integrada ao Tainacan com fluxo guiado: verifica dependências, processa documentos em lote, reindexa o conteúdo e habilita a busca textual nativa.
- * Version:     1.1.1
+ * Version:     1.2.0
  * Author:      Marcos Sigismundo
  * License:     GPL-2.0-or-later
  * Text Domain: tainacan-ocr-search
@@ -15,13 +15,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TAINACAN_OCR_SEARCH_VERSION', '1.1.1' );
+define( 'TAINACAN_OCR_SEARCH_VERSION', '1.2.0' );
 define( 'TAINACAN_OCR_SEARCH_FILE', __FILE__ );
 define( 'TAINACAN_OCR_SEARCH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'TAINACAN_OCR_SEARCH_URL', plugin_dir_url( __FILE__ ) );
 
 require_once TAINACAN_OCR_SEARCH_DIR . 'includes/class-ocr-processor.php';
 require_once TAINACAN_OCR_SEARCH_DIR . 'includes/class-ocr-rest.php';
+require_once TAINACAN_OCR_SEARCH_DIR . 'includes/class-ocr-queue.php';
+
+// Worker da fila de OCR (segundo plano).
+add_action( \Tainacan_OCR_Search\Queue::CRON_HOOK, array( '\Tainacan_OCR_Search\Queue', 'run' ) );
 
 /**
  * Bootstrap: a página admin só é registrada quando o Tainacan está carregado,
@@ -50,6 +54,10 @@ add_action(
 		require_once TAINACAN_OCR_SEARCH_DIR . 'includes/class-ocr-admin-page.php';
 		\Tainacan_OCR_Search\Admin_Page::get_instance();
 		new \Tainacan_OCR_Search\REST_Controller();
+
+		// Quadro de OCR dentro da edição do item.
+		require_once TAINACAN_OCR_SEARCH_DIR . 'includes/class-ocr-item-hook.php';
+		new \Tainacan_OCR_Search\Item_Hook();
 	},
 	20
 );
@@ -89,8 +97,8 @@ add_action(
 		if ( ! $is_document && (int) get_post_thumbnail_id( $parent ) === (int) $attachment_id ) {
 			return;
 		}
-		$processor = new \Tainacan_OCR_Search\Processor();
-		$processor->process_attachment( (int) $attachment_id );
+		// Vai para a fila (um OCR por vez, com a situação visível no item).
+		\Tainacan_OCR_Search\Queue::enqueue( array( (int) $attachment_id ) );
 	}
 );
 

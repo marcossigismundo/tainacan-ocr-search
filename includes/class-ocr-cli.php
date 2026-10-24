@@ -50,7 +50,7 @@ class CLI {
 
 		$ok = 0;
 		foreach ( $ids as $index => $id ) {
-			$res = $proc->process_attachment( $id );
+			$res = Queue::process_one( $id, $proc );
 			$tag = sprintf( '[%d/%d] #%d %s', $index + 1, count( $ids ), $id, wp_basename( (string) get_attached_file( $id ) ) );
 			if ( $res['success'] ) {
 				++$ok;

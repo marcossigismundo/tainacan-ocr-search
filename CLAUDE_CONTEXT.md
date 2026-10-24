@@ -10,7 +10,7 @@ Ele aplica OCR usando ferramentas livres (**Tesseract** + **OCRmyPDF**) sem alte
 
 - **Repositório**: https://github.com/marcossigismundo/tainacan-ocr-search
 - **Path local (Windows/XAMPP)**: `C:\xampp82\htdocs\wordpress\wp-content\plugins\tainacan-ocr-search`
-- **Versão atual**: 1.1.0 (23/10/2026; publicada no site `catalogacao` da VPS KVM 1)
+- **Versão atual**: 1.2.0 (24/10/2026; publicada no site `catalogacao` da VPS KVM 1)
 - **Autor**: Marcos Sigismundo
 - **Idioma da interface**: Português brasileiro
 - **Licença**: GPL-2.0-or-later
@@ -72,6 +72,12 @@ tainacan-ocr-search/
    g. Re-salva o item-pai → dispara reindex do Tainacan
 7. Card 4: instrui rodar `wp tainacan index-content --collection=all`
 ```
+
+## Mudanças da 1.2.0 (24/10/2026)
+
+- **Fila em segundo plano** (`includes/class-ocr-queue.php`): situação no anexo em `_tainacan_ocr_status` (queued | processing | failed; concluído = sem a meta e com `_tainacan_ocr_processed`), `_tainacan_ocr_queued_at`, `_tainacan_ocr_started_at`. Worker no cron `tainacan_ocr_search_run_queue`, lock na opção `tainacan_ocr_search_queue_lock`, até 10 min por execução, processamento parado há 30 min volta para a fila. `Queue::kick()` agenda e chama `spawn_cron()`.
+- **Quadro na edição do item** (`includes/class-ocr-item-hook.php` + `assets/item-panel.{js,css}`): gancho `tainacan_register_admin_hook( 'item', …, 'begin-left' )`; JS reage a `tainacan_navigation_path_updated` / `tainacan_item_edition_item_loaded` (com reserva pelo hash da rota), eventos delegados em `document`, consulta a cada 5 s enquanto há arquivo na fila (20 s sem). Arquivos do item = documento + anexos, fora a miniatura gerada pelo Tainacan (`Queue::item_files`).
+- REST do item com `$item->can_edit()` e só para anexos do próprio item; lote (`/enqueue`, `/dequeue`, `/progress`) com `manage_options`. A rota antiga `/process` (síncrona) continua, mas a interface não usa mais.
 
 ## Mudanças da 1.1.0 (23/10/2026)
 

@@ -177,43 +177,96 @@
 			stopRequested = false;
 			btnStart.disabled = true;
 			btnStop.disabled = false;
-			processNext();
+			// O OCR roda no servidor, em fila: a página só enfileira (em partes de
+			// 500, para não estourar o tempo da requisição) e acompanha.
+			// Sem "apenas não processados", o lote refaz também os prontos.
+			const force = ! el( 'tnc-ocr-only-pending' ).checked;
+			chunks( queueIds, 500 ).reduce( function ( chain, part ) {
+				return chain.then( function () {
+					return api( '/enqueue', { method: 'POST', data: { attachment_ids: part, force: force } } );
+				} );
+			}, Promise.resolve() ).then( function () {
+				addLog( i18n.queuedAll || '', '' );
+				pollProgress();
+			} ).catch( function ( err ) {
+				addLog( i18n.errorPrefix + ( err.message || err ), 'tnc-ocr-bad' );
+				btnStart.disabled = false;
+				btnStop.disabled = true;
+			} );
 		} );
 
 		btnStop.addEventListener( 'click', function () {
 			stopRequested = true;
 			btnStop.disabled = true;
+			// Tira da fila o que ainda não começou; o arquivo em andamento termina.
+			let removed = 0;
+			chunks( queueIds, 1000 ).reduce( function ( chain, part ) {
+				return chain.then( function () {
+					return api( '/dequeue', { method: 'POST', data: { attachment_ids: part } } ).then( function ( res ) {
+						removed += res.removed || 0;
+					} );
+				} );
+			}, Promise.resolve() ).then( function () {
+				addLog( ( i18n.paused || '' ).replace( '%d', removed ), '' );
+				btnStart.disabled = false;
+			} );
 		} );
 	}
 
-	function processNext() {
-		if ( stopRequested || queueIndex >= queueIds.length ) {
-			el( 'tnc-ocr-start' ).disabled = false;
-			el( 'tnc-ocr-stop' ).disabled = true;
-			return;
+	const reported = {};
+
+	function chunks( list, size ) {
+		const out = [];
+		for ( let i = 0; i < list.length; i += size ) {
+			out.push( list.slice( i, i + size ) );
 		}
-		const id = queueIds[ queueIndex ];
-		addLog( '#' + id + ' — ' + i18n.processing + '…' );
-		api( '/process', { method: 'POST', data: { attachment_id: id } } ).then( function ( res ) {
-			queueIndex++;
-			el( 'tnc-ocr-done' ).textContent = String( queueIndex );
+		return out;
+	}
+
+	function pollProgress() {
+		// Em partes de 1000 IDs (o servidor não responde mais que isso por vez).
+		const map = {};
+		chunks( queueIds, 1000 ).reduce( function ( chain, part ) {
+			return chain.then( function () {
+				return api( '/progress', { method: 'POST', data: { attachment_ids: part } } ).then( function ( res ) {
+					Object.assign( map, res || {} );
+				} );
+			} );
+		}, Promise.resolve() ).then( function () {
+			let finished = 0;
+			let active = 0;
+			queueIds.forEach( function ( id ) {
+				const s = map[ id ];
+				// Sem resposta para o ID: não dá para dizer que terminou.
+				if ( ! s || 'queued' === s.status || 'processing' === s.status ) {
+					active++;
+					return;
+				}
+				finished++;
+				if ( reported[ id ] || 'none' === s.status ) {
+					return;
+				}
+				reported[ id ] = true;
+				if ( 'failed' === s.status ) {
+					addLog( '#' + id + ' ✗ ' + ( s.error || 'erro' ), 'tnc-ocr-bad' );
+				} else {
+					const detail = ( i18n.doneShort || '%1$s / %2$s' )
+						.replace( '%1$s', s.pages || 0 )
+						.replace( '%2$s', s.chars || 0 );
+					addLog( '#' + id + ' ✓ ' + i18n.done + ' (' + detail + ')', 'tnc-ocr-good' );
+				}
+			} );
+			queueIndex = finished;
+			el( 'tnc-ocr-done' ).textContent = String( finished );
 			updateBar();
-			if ( res.success ) {
-				const detail = ( i18n.doneDetail || '%1$s / %2$s / %3$s' )
-					.replace( '%1$s', res.pages || 0 )
-					.replace( '%2$s', res.text_length || 0 )
-					.replace( '%3$s', res.seconds || 0 );
-				addLog( '#' + id + ' ✓ ' + i18n.done + ' (' + detail + ')', 'tnc-ocr-good' );
+			if ( active && ! stopRequested ) {
+				setTimeout( pollProgress, 5000 );
 			} else {
-				addLog( '#' + id + ' ✗ ' + ( res.message || 'erro' ), 'tnc-ocr-bad' );
+				el( 'tnc-ocr-start' ).disabled = false;
+				el( 'tnc-ocr-stop' ).disabled = true;
 			}
-			processNext();
-		} ).catch( function ( err ) {
-			addLog( '#' + id + ' ✗ ' + ( err.message || err ), 'tnc-ocr-bad' );
-			queueIndex++;
-			el( 'tnc-ocr-done' ).textContent = String( queueIndex );
-			updateBar();
-			processNext();
+		} ).catch( function () {
+			setTimeout( pollProgress, 10000 );
 		} );
 	}
 

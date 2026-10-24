@@ -84,8 +84,11 @@ class Admin_Page extends \Tainacan\Pages {
 				'coreOn'          => __( 'A indexação de conteúdo de PDF do Tainacan está ligada: o texto do OCR do documento principal entra na busca nativa.', 'tainacan-ocr-search' ),
 				'coreOff'         => __( 'A indexação de conteúdo de PDF do Tainacan está desligada: sem ela, o texto do OCR do documento principal não chega à busca nativa.', 'tainacan-ocr-search' ),
 				'coreEnable'      => __( 'Ligar agora', 'tainacan-ocr-search' ),
-				/* translators: 1: pages, 2: characters, 3: seconds */
-				'doneDetail'      => __( '%1$s pág., %2$s caracteres, %3$ss', 'tainacan-ocr-search' ),
+				/* translators: 1: pages, 2: characters */
+				'doneShort'       => __( '%1$s pág., %2$s caracteres', 'tainacan-ocr-search' ),
+				'queuedAll'       => __( 'Documentos na fila. O OCR roda no servidor em segundo plano: pode fechar esta página, ele continua.', 'tainacan-ocr-search' ),
+				/* translators: %d: number of files removed from the queue */
+				'paused'          => __( 'Pausado: %d documento(s) saíram da fila; o que já estava em andamento termina.', 'tainacan-ocr-search' ),
 			),
 		) );
 	}
@@ -157,7 +160,7 @@ class Admin_Page extends \Tainacan\Pages {
 			<section class="tnc-ocr-card" data-step="3">
 				<h2><span class="tnc-step">3</span> <?php esc_html_e( 'Processar documentos em lote', 'tainacan-ocr-search' ); ?></h2>
 				<p class="tnc-ocr-help">
-					<?php esc_html_e( 'Selecione a coleção (ou todas) e calcule a fila. O processamento roda no seu servidor — nenhum documento sai do ambiente. Você pode acompanhar o progresso e pausar a qualquer momento.', 'tainacan-ocr-search' ); ?>
+					<?php esc_html_e( 'Selecione a coleção (ou todas) e calcule a fila. O processamento roda no seu servidor, em segundo plano — nenhum documento sai do ambiente, e você pode fechar esta página. Para um item só, use o quadro "Texto dos arquivos (OCR)" na própria edição do item.', 'tainacan-ocr-search' ); ?>
 				</p>
 				<div class="tnc-ocr-row">
 					<label>
