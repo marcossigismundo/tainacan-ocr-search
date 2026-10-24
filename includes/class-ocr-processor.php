@@ -402,7 +402,8 @@ class Processor {
 		// Extrai o texto com quebras de página ("\f"), que o Oráculo e outros
 		// consumidores usam para citar a página.
 		$text  = $this->extract_text_from_pdf( $tmp_out );
-		$pages = '' === $text ? 0 : substr_count( rtrim( $text, "\f" ), "\f" ) + 1;
+		// pdftotext fecha cada página com "\f", inclusive as em branco do fim.
+		$pages = '' === $text ? 0 : max( 1, substr_count( $text, "\f" ) );
 
 		// Só PDFs são substituídos: um PDF gerado ao lado de uma imagem não
 		// seria anexo de nada e ficaria órfão em uploads/.
